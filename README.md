@@ -7,7 +7,6 @@ Tmux plugin that exposes the active pane's [Claude Code](https://docs.anthropic.
 - Adds a `#{claude_session}` placeholder usable inside any tmux format option.
 - Walks the active pane's process tree, looks up `~/.claude/sessions/<pid>.json`, and prints the session `name` (or the first 8 chars of its `sessionId`).
 - Falls back to the window's current name (`#W`) — or whatever you configure — when no claude process is running in the pane.
-- Binds `prefix + C` (shift-C) to open a new tmux window running `claude`.
 - Integrates with [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect): on save, rewrites each pane's `claude` command to `claude --resume <sessionId>` so restore picks up the conversation instead of starting fresh.
 
 ## Install
@@ -42,28 +41,11 @@ set -g status-right '#{claude_session} | %H:%M'
 
 Make sure `status-interval` is reasonable (e.g. `set -g status-interval 2`) so the placeholder refreshes.
 
-### New-session keybinding
-
-By default the plugin binds `prefix + C` (shift-C — note the capital) to:
-
-```
-new-window claude
-```
-
-Disable or customize:
-
-```tmux
-set -g @claude-session-new-key 'C'        # default; set empty to disable
-set -g @claude-session-new-command 'claude'
-```
-
 ## Options
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `@claude-session-fallback` | `#W` | Text shown when no claude process is found in the pane tree. |
-| `@claude-session-new-key` | `C` | Key (after prefix) to launch a new claude window. Empty string disables. |
-| `@claude-session-new-command` | `claude` | Command run in the new window. |
 | `@claude-session-resurrect` | `on` | Register the tmux-resurrect post-save hook. Set to any other value to disable. |
 
 The sessions directory can be overridden via the `CLAUDE_SESSIONS_DIR` env var if claude's data dir is non-standard.

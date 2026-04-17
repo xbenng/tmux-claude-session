@@ -36,16 +36,6 @@ do
     esac
 done
 
-# Keybinding: prefix + C (shift-C) opens a fresh claude session in a new window.
-new_key=$(tmux show-option -gqv '@claude-session-new-key')
-[ -z "$new_key" ] && new_key='C'
-new_cmd=$(tmux show-option -gqv '@claude-session-new-command')
-[ -z "$new_cmd" ] && new_cmd='claude'
-
-if [ "$new_key" != '' ] && [ "$new_key" != 'none' ]; then
-    tmux bind-key "$new_key" new-window "$new_cmd"
-fi
-
 # tmux-resurrect integration: rewrite saved `claude` commands to include
 # `--resume <sessionId>` so restore picks up the conversation. No-op unless
 # tmux-resurrect is installed and triggers a save.
