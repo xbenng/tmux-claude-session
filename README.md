@@ -8,6 +8,7 @@ Tmux plugin that exposes the active pane's [Claude Code](https://docs.anthropic.
 - Walks the active pane's process tree, looks up `~/.claude/sessions/<pid>.json`, and prints the session `name` (or the first 8 chars of its `sessionId`).
 - Falls back to the window's current name (`#W`) — or whatever you configure — when no claude process is running in the pane.
 - Binds `prefix + C` (shift-C) to open a new tmux window running `claude`.
+- Integrates with [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect): on save, rewrites each pane's `claude` command to `claude --resume <sessionId>` so restore picks up the conversation instead of starting fresh.
 
 ## Install
 
@@ -63,12 +64,17 @@ set -g @claude-session-new-command 'claude'
 | `@claude-session-fallback` | `#W` | Text shown when no claude process is found in the pane tree. |
 | `@claude-session-new-key` | `C` | Key (after prefix) to launch a new claude window. Empty string disables. |
 | `@claude-session-new-command` | `claude` | Command run in the new window. |
+| `@claude-session-resurrect` | `on` | Register the tmux-resurrect post-save hook. Set to any other value to disable. |
 
 The sessions directory can be overridden via the `CLAUDE_SESSIONS_DIR` env var if claude's data dir is non-standard.
 
 ## How it works
 
-When claude starts, it writes `~/.claude/sessions/<pid>.json` containing its `sessionId` and (optional) `name`. The plugin script walks up from `#{pane_pid}` via `ps -o ppid=`, checks for a matching file at each hop, and prints the result. Because `#{pane_pid}` is the top-level process tmux spawned in the pane, the walk terminates quickly.
+When claude starts, it writes `~/.claude/sessions/<pid>.json` containing its `sessionId` and (optional) `name`.
+
+**Format placeholder:** the plugin walks up from `#{pane_pid}` via `ps -o ppid=`, checks for a matching file at each hop, and prints the name (or short sessionId). The walk terminates quickly because `#{pane_pid}` is the top-level process tmux spawned in the pane.
+
+**Resurrect integration:** when tmux-resurrect writes its save file, the post-save hook scans every pane whose command is `claude`, resolves the sessionId from the same manifest files, and edits the saved command line to inject `--resume <sessionId>`. On restore, tmux-resurrect replays the rewritten command and Claude Code resumes the conversation. Requires [tmux-resurrect](https://github.com/tmux-plugins/tmux-resurrect) to be installed; the hook is a no-op otherwise.
 
 ## Requirements
 

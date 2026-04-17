@@ -45,3 +45,14 @@ new_cmd=$(tmux show-option -gqv '@claude-session-new-command')
 if [ "$new_key" != '' ] && [ "$new_key" != 'none' ]; then
     tmux bind-key "$new_key" new-window "$new_cmd"
 fi
+
+# tmux-resurrect integration: rewrite saved `claude` commands to include
+# `--resume <sessionId>` so restore picks up the conversation. No-op unless
+# tmux-resurrect is installed and triggers a save.
+resurrect_enabled=$(tmux show-option -gqv '@claude-session-resurrect')
+[ -z "$resurrect_enabled" ] && resurrect_enabled='on'
+
+if [ "$resurrect_enabled" = 'on' ]; then
+    tmux set-option -g @resurrect-hook-post-save-layout \
+        "$CURRENT_DIR/scripts/resurrect-save-hook.sh"
+fi
